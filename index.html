@@ -1280,19 +1280,37 @@ function renderApptPage(){
         const bg = isWarn ? '#fbefd5' : '#ffffff';
         const border = isWarn ? '#ecd29d' : 'var(--rim)';
         const lineColor = isWarn ? '#b07a25' : '#3E6B8A';
+        const numBg = isWarn ? '#b07a25' : 'var(--brand-soft)';
+        const numColor = isWarn ? '#fff' : 'var(--brand-deep)';
+        const dateColor = isWarn ? '#7a4f11' : 'var(--ink)';
+        const subColor = isWarn ? '#7a4f11' : 'var(--ink-2)';
+        const muteColor = isWarn ? '#a07d3a' : 'var(--muted)';
+        const sepColor = isWarn ? '#ecd29d' : 'var(--rim)';
         const badge = days === 0 ? '今天' : days === 1 ? '明天' : days <= 7 ? days+' 天後' : '';
-        const badgeHtml = isWarn && badge ? `<span style="display:inline-block;font-size:11px;font-weight:700;padding:3px 9px;border-radius:10px;background:#b07a25;color:#fff;margin-left:8px">${badge}</span>` : '';
+        const badgeHtml = isWarn && badge ? `<span style="display:inline-block;font-size:10.5px;font-weight:700;padding:2px 8px;border-radius:9px;background:#b07a25;color:#fff;margin-top:4px;align-self:flex-start">${badge}</span>` : '';
+        const [_y,_m,_d] = a.date.split('-');
+        const wdays = ['日','一','二','三','四','五','六'];
+        const _wk = wdays[new Date(parseInt(_y),parseInt(_m)-1,parseInt(_d)).getDay()];
         html += `
-        <div style="background:${bg};border:1px solid ${border};border-radius:14px;padding:14px 14px 14px 18px;margin-bottom:10px;position:relative">
-          <div style="position:absolute;left:0;top:12px;bottom:12px;width:3px;border-radius:0 3px 3px 0;background:${lineColor}"></div>
-          <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:8px">
-            <div style="flex:1;min-width:0">
-              <div style="font-size:14px;font-weight:700;color:var(--ink)">${dkFmt(a.date)}　${a.session||''}　<span style="color:var(--brand-deep)">${a.num||''} 號</span>${badgeHtml}</div>
-              <div style="font-size:13.5px;color:var(--ink-2);margin-top:6px;font-weight:500">${a.hospital||''}　${a.dept||''}</div>
-              ${a.doctor?`<div style="font-size:12px;color:var(--muted);margin-top:3px">${a.doctor}</div>`:''}
-            </div>
-            <span onclick="window.confirmDelAppt('${a.id}')" style="color:var(--muted);cursor:pointer;font-size:18px;line-height:1;padding:2px 4px">×</span>
+        <div style="background:${bg};border:1px solid ${border};border-radius:16px;padding:14px 14px 14px 18px;margin-bottom:10px;position:relative;display:flex;align-items:stretch;gap:10px;min-height:96px">
+          <div style="position:absolute;left:0;top:14px;bottom:14px;width:3px;border-radius:0 3px 3px 0;background:${lineColor}"></div>
+          <div style="flex-shrink:0;display:flex;flex-direction:column;justify-content:center;min-width:56px">
+            <div style="font-size:18px;font-weight:700;color:${dateColor};line-height:1.1;letter-spacing:.02em">${_m}/${_d}</div>
+            <div style="font-size:11.5px;color:${muteColor};margin-top:2px">(${_wk})</div>
+            ${badgeHtml}
           </div>
+          <div style="width:1px;background:${sepColor};flex-shrink:0;margin:2px 0"></div>
+          <div style="flex:1;min-width:0;display:flex;flex-direction:column;justify-content:center;gap:3px;overflow:hidden">
+            <div style="font-size:14px;font-weight:700;color:${dateColor}">${a.session||''}</div>
+            <div style="font-size:13px;color:${subColor};font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${a.hospital||''}</div>
+            <div style="font-size:12.5px;color:${subColor};white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${a.dept||''}</div>
+            ${a.doctor?`<div style="font-size:11.5px;color:${muteColor};white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${a.doctor}</div>`:''}
+          </div>
+          <div style="flex-shrink:0;display:flex;flex-direction:column;align-items:center;justify-content:center;background:${numBg};border-radius:12px;padding:6px 10px;min-width:54px">
+            <div style="font-size:22px;font-weight:700;color:${numColor};line-height:1;font-variant-numeric:tabular-nums">${a.num||''}</div>
+            <div style="font-size:10.5px;color:${numColor};margin-top:2px;font-weight:600">號</div>
+          </div>
+            <span onclick="window.confirmDelAppt('${a.id}')" style="position:absolute;top:6px;right:8px;color:${muteColor};cursor:pointer;font-size:18px;line-height:1;padding:4px 8px">×</span>
         </div>`;
       });
     }
