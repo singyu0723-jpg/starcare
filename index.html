@@ -1277,40 +1277,40 @@ function renderApptPage(){
       list.forEach(a => {
         const days = Math.ceil((new Date(a.date) - now) / 86400000);
         const isWarn = days >= 0 && days <= 7;
-        const bg = isWarn ? '#fbefd5' : '#ffffff';
-        const border = isWarn ? '#ecd29d' : 'var(--rim)';
-        const lineColor = isWarn ? '#b07a25' : '#3E6B8A';
-        const numBg = isWarn ? '#b07a25' : 'var(--brand-soft)';
-        const numColor = isWarn ? '#fff' : 'var(--brand-deep)';
-        const dateColor = isWarn ? '#7a4f11' : 'var(--ink)';
-        const subColor = isWarn ? '#7a4f11' : 'var(--ink-2)';
-        const muteColor = isWarn ? '#a07d3a' : 'var(--muted)';
-        const sepColor = isWarn ? '#ecd29d' : 'var(--rim)';
+        const cardBorder = isWarn ? '#ecd29d' : 'var(--rim)';
+        const dateBg = isWarn ? '#fbe5cc' : (a.patient === '弟弟' ? '#fbe5cc' : '#dbeaf5');
+        const dateText = isWarn ? '#a05a1f' : (a.patient === '弟弟' ? '#a05a1f' : '#2b5a85');
+        const dateLine = isWarn ? '#d4a06d' : (a.patient === '弟弟' ? '#d4a06d' : '#a0c0d8');
+        const numBg = '#E8F3EC';
+        const numColor = '#377054';
         const badge = days === 0 ? '今天' : days === 1 ? '明天' : days <= 7 ? days+' 天後' : '';
-        const badgeHtml = isWarn && badge ? `<span style="display:inline-block;font-size:10.5px;font-weight:700;padding:2px 8px;border-radius:9px;background:#b07a25;color:#fff;margin-top:4px;align-self:flex-start">${badge}</span>` : '';
         const [_y,_m,_d] = a.date.split('-');
         const wdays = ['日','一','二','三','四','五','六'];
         const _wk = wdays[new Date(parseInt(_y),parseInt(_m)-1,parseInt(_d)).getDay()];
+        const _M = parseInt(_m), _D = parseInt(_d);
+        const badgeHtml = isWarn && badge ? `<div style="position:absolute;top:8px;right:48px;font-size:10.5px;font-weight:700;padding:3px 9px;border-radius:9px;background:#b07a25;color:#fff">${badge}</div>` : '';
         html += `
-        <div style="background:${bg};border:1px solid ${border};border-radius:16px;padding:14px 14px 14px 18px;margin-bottom:10px;position:relative;display:flex;align-items:stretch;gap:10px;min-height:96px">
-          <div style="position:absolute;left:0;top:14px;bottom:14px;width:3px;border-radius:0 3px 3px 0;background:${lineColor}"></div>
-          <div style="flex-shrink:0;display:flex;flex-direction:column;justify-content:center;min-width:56px">
-            <div style="font-size:18px;font-weight:700;color:${dateColor};line-height:1.1;letter-spacing:.02em">${_m}/${_d}</div>
-            <div style="font-size:11.5px;color:${muteColor};margin-top:2px">(${_wk})</div>
-            ${badgeHtml}
+        <div style="background:#fff;border:1px solid ${cardBorder};border-radius:18px;padding:14px;margin-bottom:10px;position:relative;display:flex;align-items:center;gap:10px;min-height:130px;overflow:hidden">
+          ${badgeHtml}
+          <div style="flex-shrink:0;width:96px;align-self:stretch;background:${dateBg};border-radius:12px;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:8px 4px">
+            <div style="font-size:26px;font-weight:700;color:${dateText};line-height:1.05;font-variant-numeric:tabular-nums">${_M}/${_D}</div>
+            <div style="font-size:12px;color:${dateText};margin-top:4px">週${_wk}</div>
+            <div style="height:1px;background:${dateLine};width:60%;margin:6px 0"></div>
+            <div style="font-size:13px;font-weight:700;color:${dateText}">${a.session||''}</div>
           </div>
-          <div style="width:1px;background:${sepColor};flex-shrink:0;margin:2px 0"></div>
-          <div style="flex:1;min-width:0;display:flex;flex-direction:column;justify-content:center;gap:3px;overflow:hidden">
-            <div style="font-size:14px;font-weight:700;color:${dateColor}">${a.session||''}</div>
-            <div style="font-size:13px;color:${subColor};font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${a.hospital||''}</div>
-            <div style="font-size:12.5px;color:${subColor};white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${a.dept||''}</div>
-            ${a.doctor?`<div style="font-size:11.5px;color:${muteColor};white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${a.doctor}</div>`:''}
+          <div style="flex:0 0 30%;display:flex;align-items:center;justify-content:center;min-width:0;padding:0 4px">
+            <div style="font-size:20px;font-weight:700;color:var(--ink);text-align:center;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;width:100%">${a.hospital||''}</div>
           </div>
-          <div style="flex-shrink:0;display:flex;flex-direction:column;align-items:center;justify-content:center;background:${numBg};border-radius:12px;padding:6px 10px;min-width:54px">
-            <div style="font-size:22px;font-weight:700;color:${numColor};line-height:1;font-variant-numeric:tabular-nums">${a.num||''}</div>
-            <div style="font-size:10.5px;color:${numColor};margin-top:2px;font-weight:600">號</div>
+          <div style="width:1px;align-self:stretch;background:var(--rim);margin:14px 0;flex-shrink:0"></div>
+          <div style="flex:1;min-width:0;display:flex;flex-direction:column;justify-content:center;gap:4px;padding:0 6px">
+            <div style="font-size:17px;font-weight:700;color:var(--ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${a.dept||''}</div>
+            ${a.doctor?`<div style="font-size:12.5px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${a.doctor}</div>`:''}
           </div>
-            <span onclick="window.confirmDelAppt('${a.id}')" style="position:absolute;top:6px;right:8px;color:${muteColor};cursor:pointer;font-size:18px;line-height:1;padding:4px 8px">×</span>
+          <div style="flex-shrink:0;width:78px;align-self:stretch;background:${numBg};border-radius:12px;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:4px">
+            <div style="font-size:30px;font-weight:700;color:${numColor};line-height:1;font-variant-numeric:tabular-nums">${a.num||''}</div>
+            <div style="font-size:11px;color:${numColor};margin-top:3px;font-weight:600">號</div>
+          </div>
+          <span onclick="window.confirmDelAppt('${a.id}')" style="flex-shrink:0;color:var(--muted);cursor:pointer;font-size:18px;line-height:1;padding:6px 4px;margin-left:-2px">×</span>
         </div>`;
       });
     }
