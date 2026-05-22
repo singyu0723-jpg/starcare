@@ -1293,7 +1293,7 @@ function renderApptPage(){
           <div style="flex-shrink:0;width:88px;background:${dateBg};border-radius:12px;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:8px 4px">
             <div style="font-size:24px;font-weight:700;color:${dateText};line-height:1.05;font-variant-numeric:tabular-nums">${_M}/${_D}</div>
             <div style="height:1px;background:${dateLine};width:62%;margin:8px 0"></div>
-            <div style="display:flex;align-items:center;gap:6px;font-size:13px;font-weight:700;color:${dateText};white-space:nowrap"><span>週${_wk}</span><span style="opacity:.5">·</span><span>${a.session||''}</span></div>
+            <div style="font-size:13px;font-weight:700;color:${dateText};white-space:nowrap">週${_wk} ${a.session||''}</div>
           </div>
           <div style="flex:1;min-width:0;display:flex;flex-direction:column;justify-content:center;gap:4px;padding:0 6px">
             <div style="font-size:19px;font-weight:700;color:var(--ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${a.hospital||''}</div>
