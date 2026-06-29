@@ -95,6 +95,19 @@ body{
 }
 .tab.active{color:var(--brand-deep);background:#fff;box-shadow:var(--shadow-xs);border:1px solid var(--rim)}
 
+/* ── 未解尿提醒列 ── */
+.ur-bar{
+  display:flex;align-items:center;gap:9px;cursor:pointer;
+  margin:10px 14px 0;padding:11px 14px;border-radius:12px;
+  border:1px solid;font-size:13.5px;font-weight:700;letter-spacing:.02em;
+  box-shadow:var(--shadow-xs);
+}
+.ur-bar .ur-ico{font-size:15px;line-height:1;flex-shrink:0}
+.ur-bar .ur-txt{flex:1;line-height:1.4}
+.ur-warn{background:var(--warn-soft);border-color:#ecd29d;color:#7a4f11}
+.ur-danger{background:var(--danger-soft);border-color:#efc1b2;color:#7a2a1a}
+.ur-bar:active{transform:scale(.99)}
+
 .pg{padding:12px 14px 40px}
 
 /* ── 小節標題 ── 放大＋綠色強調橫槓 */
@@ -437,6 +450,7 @@ body{
       <div class="cg-pill" id="cg-pill" onclick="window.showNameModal()">設定名字</div>
     </div>
   </div>
+  <div id="urine-reminder"></div>
   <div class="tab-bar">
     <div class="tab active" onclick="window.goTab(0)">輸出入量</div>
     <div class="tab" onclick="window.goTab(1)">生理狀態</div>
@@ -748,6 +762,23 @@ function updateTabBar(){
   tabs.forEach((tb,i)=>tb.textContent=labels[i]);
 }
 
+// ── 標題下方：超過6小時未解尿提醒列（所有分頁常駐，每分鐘更新）──
+function updateUrineReminder(){
+  const box=el('urine-reminder');
+  if(!box) return;
+  if(!cgName){box.innerHTML='';return;}
+  const ua=getUA();
+  if(ua.hrs<6){box.innerHTML='';return;}
+  const danger=ua.hrs>=8;
+  const cls=danger?'ur-danger':'ur-warn';
+  const icon=danger?'⚠':'⏰';
+  const tip=danger?t('警告：'):t('提醒：');
+  box.innerHTML=`<div class="ur-bar ${cls}" onclick="window.goTab(2)">
+    <span class="ur-ico">${icon}</span>
+    <span class="ur-txt">${tip}已 ${ua.hrs} 小時 ${ua.mins} 分未解尿</span>
+  </div>`;
+}
+
 window.showNameModal=function(){
   M().innerHTML=`<div class="modal-bg"><div class="modal-box">
     <h3>${t('請輸入您的名字')}</h3>
@@ -771,7 +802,7 @@ function goTab(i){
   if(chartInst){chartInst.destroy();chartInst=null;}
   render();
 }
-function render(){updateTabBar();if(tab===0)renderIO();else if(tab===1)renderVT();else if(tab===2)renderReview();else renderApptPage();}
+function render(){updateTabBar();updateUrineReminder();if(tab===0)renderIO();else if(tab===1)renderVT();else if(tab===2)renderReview();else renderApptPage();}
 
 function showToast(title,lines,onOk){
   M().innerHTML=`<div class="modal-bg"><div class="modal-box">
@@ -1483,6 +1514,9 @@ window.confirmDelAppt = function(id){
 
 // 讓 tab 切換後重新 render
 window.goTab=goTab;
+
+// 每分鐘更新未解尿提醒列（時間會隨著累積，不需互動也會刷新）
+setInterval(()=>{ if(cgName) updateUrineReminder(); }, 60000);
 </script>
 
 <!-- Chart.js & html2canvas via CDN -->
