@@ -441,6 +441,7 @@ body{
     <div class="tab active" onclick="window.goTab(0)">輸出入量</div>
     <div class="tab" onclick="window.goTab(1)">生理狀態</div>
     <div class="tab" onclick="window.goTab(2)">查閱記錄</div>
+    <div class="tab" onclick="window.goTab(3)">掛號紀錄</div>
   </div>
   <div class="pg" id="content"><div class="loading">連線中...</div></div>
 </div>
@@ -471,7 +472,8 @@ let isSaving=false;
 // ── 簡繁切換 ──
 const ZH_TW_TO_CN = {
   '護理日誌':'护理日志','設定名字':'设定名字','連線中':'连线中',
-  '輸出入量':'输出入量','生理狀態':'生理状态','查閱記錄':'查阅记录',
+  '輸出入量':'输出入量','生理狀態':'生理状态','查閱記錄':'查阅记录','掛號紀錄':'挂号记录',
+  '當天合計':'当天合计','總輸入':'总输入','總輸出':'总输出',
   '輸入':'输入','牛奶':'牛奶','藥＋水':'药＋水','時間':'时间','現在':'现在','新增輸入':'新增输入',
   '輸出':'输出','尿液':'尿液','大便':'大便','新增輸出':'新增输出',
   '今日記錄':'今日记录','今日尚無記錄':'今日尚无记录',
@@ -742,7 +744,7 @@ function updatePill(){
 }
 function updateTabBar(){
   const tabs=document.querySelectorAll('.tab');
-  const labels=[t('輸出入量'),t('生理狀態'),t('查閱記錄')];
+  const labels=[t('輸出入量'),t('生理狀態'),t('查閱記錄'),t('掛號紀錄')];
   tabs.forEach((tb,i)=>tb.textContent=labels[i]);
 }
 
@@ -769,7 +771,7 @@ function goTab(i){
   if(chartInst){chartInst.destroy();chartInst=null;}
   render();
 }
-function render(){updateTabBar();if(tab===0)renderIO();else if(tab===1)renderVT();else renderReview();}
+function render(){updateTabBar();if(tab===0)renderIO();else if(tab===1)renderVT();else if(tab===2)renderReview();else renderApptPage();}
 
 function showToast(title,lines,onOk){
   M().innerHTML=`<div class="modal-bg"><div class="modal-box">
@@ -1092,9 +1094,24 @@ function renderReview(){
     <span>${isToday?t('今天')+' '+dkFmt(viewDate):dkFmt(viewDate)}</span>
     <button onclick="window.chDate(1)" ${isToday?'disabled style="opacity:.4;cursor:default"':''}>${t('後一天')} ›</button>
   </div>
-  ${buildDayDetail()}
-  <button class="export-btn" onclick="window.openAppointments()">查詢掛號紀錄</button>`;
+  ${buildDaySummary()}
+  ${buildDayDetail()}`;
   setTimeout(()=>drawChart(),80);
+}
+
+function buildDaySummary(){
+  // 只在「輸出入量」明細模式顯示，與下方記錄一致
+  if(chartType!=='io') return '';
+  const day=ioRecs.filter(r=>r.date===viewDate);
+  const{inW,outW,diff}=calcTotals(day);
+  return`<div class="subtotal" style="margin-top:0;margin-bottom:14px">
+    <div class="subtotal-title">${t('當天合計')}</div>
+    <div class="st-row">
+      <div class="st-item">${t('總輸入')}<br/><strong>${inW}</strong> <small>cc</small></div>
+      <div class="st-item">${t('總輸出')}<br/><strong>${outW}</strong> <small>cc</small></div>
+    </div>
+    <div class="st-diff ${diff>=0?'diff-pos':'diff-neg'}">${t('差額（輸入－輸出）')}：${diff>0?'+':''}${diff} cc</div>
+  </div>`;
 }
 
 function buildDayDetail(){
@@ -1261,8 +1278,7 @@ function renderApptPage(){
   
   const patientOrder = ['弟弟','媽媽'];
   let html = `
-  <div style="display:flex;align-items:center;gap:10px;margin-bottom:18px">
-    <button onclick="window.closeAppointments()" style="height:40px;width:40px;border-radius:12px;border:1px solid var(--rim-2);background:#fff;font-size:20px;cursor:pointer;font-family:inherit">‹</button>
+  <div style="display:flex;align-items:center;gap:10px;margin-top:6px;margin-bottom:18px">
     <div style="flex:1;font-size:17px;font-weight:700;color:var(--ink)">掛號紀錄</div>
     <button onclick="window.showApptForm()" style="height:40px;padding:0 14px;border-radius:12px;border:none;background:var(--brand);color:#fff;font-size:14px;font-weight:700;cursor:pointer;font-family:inherit">＋ 新增</button>
   </div>`;
