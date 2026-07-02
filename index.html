@@ -1290,8 +1290,10 @@ function renderApptPage(){
   now.setHours(0,0,0,0);
   
   // 分類
-  const future = apptRecs.filter(a => new Date(a.date) >= now);
-  const past = apptRecs.filter(a => new Date(a.date) < now);
+  // 以本地時區把 "YYYY-MM-DD" 解析為當天 00:00，避免被當成 UTC 而位移一天
+  const pd = s => { const [y,m,d]=s.split('-').map(Number); return new Date(y,m-1,d); };
+  const future = apptRecs.filter(a => pd(a.date) >= now);
+  const past = apptRecs.filter(a => pd(a.date) < now);
   
   // 按病人分組（future）
   const futurePatients = {};
@@ -1301,11 +1303,11 @@ function renderApptPage(){
   });
   // 各自按日期排序
   Object.keys(futurePatients).forEach(k => {
-    futurePatients[k].sort((a,b)=> new Date(a.date) - new Date(b.date));
+    futurePatients[k].sort((a,b)=> pd(a.date) - pd(b.date));
   });
   
   // past 按日期倒序
-  past.sort((a,b)=> new Date(b.date) - new Date(a.date));
+  past.sort((a,b)=> pd(b.date) - pd(a.date));
   
   const patientOrder = ['弟弟','媽媽'];
   let html = `
@@ -1322,7 +1324,7 @@ function renderApptPage(){
       html += `<div style="text-align:center;padding:16px;color:var(--muted);font-size:13px">尚無即將回診</div>`;
     } else {
       list.forEach(a => {
-        const days = Math.ceil((new Date(a.date) - now) / 86400000);
+        const days = Math.round((pd(a.date) - now) / 86400000);
         const isWarn = days >= 0 && days <= 7;
         const cardBorder = isWarn ? '#ecd29d' : 'var(--rim)';
         const dateBg = a.patient === '弟弟' ? '#fbe5cc' : '#dbeaf5';
