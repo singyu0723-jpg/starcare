@@ -451,6 +451,7 @@ body{
     </div>
   </div>
   <div id="urine-reminder"></div>
+  <div id="stool-reminder"></div>
   <div class="tab-bar">
     <div class="tab active" onclick="window.goTab(0)">輸出入量</div>
     <div class="tab" onclick="window.goTab(1)">生理狀態</div>
@@ -779,6 +780,23 @@ function updateUrineReminder(){
   </div>`;
 }
 
+// ── 標題下方：超過2.5天未解便提醒列（與解尿同區，每分鐘更新）──
+function updateStoolReminder(){
+  const box=el('stool-reminder');
+  if(!box) return;
+  if(!cgName){box.innerHTML='';return;}
+  const si=getStoolInfo();
+  if(si.totalHrs<60){box.innerHTML='';return;}   // 未滿 2.5 天不顯示
+  const danger=si.totalHrs>=72;                   // 滿 3 天轉紅
+  const cls=danger?'ur-danger':'ur-warn';
+  const icon=danger?'⚠':'⏰';
+  const tip=danger?t('警告：'):t('提醒：');
+  box.innerHTML=`<div class="ur-bar ${cls}" onclick="window.goTab(2)">
+    <span class="ur-ico">${icon}</span>
+    <span class="ur-txt">${tip}已 ${si.days} 天 ${si.hrs} 小時未解便</span>
+  </div>`;
+}
+
 window.showNameModal=function(){
   M().innerHTML=`<div class="modal-bg"><div class="modal-box">
     <h3>${t('請輸入您的名字')}</h3>
@@ -802,7 +820,7 @@ function goTab(i){
   if(chartInst){chartInst.destroy();chartInst=null;}
   render();
 }
-function render(){updateTabBar();updateUrineReminder();if(tab===0)renderIO();else if(tab===1)renderVT();else if(tab===2)renderReview();else renderApptPage();}
+function render(){updateTabBar();updateUrineReminder();updateStoolReminder();if(tab===0)renderIO();else if(tab===1)renderVT();else if(tab===2)renderReview();else renderApptPage();}
 
 function showToast(title,lines,onOk){
   M().innerHTML=`<div class="modal-bg"><div class="modal-box">
@@ -1518,7 +1536,7 @@ window.confirmDelAppt = function(id){
 window.goTab=goTab;
 
 // 每分鐘更新未解尿提醒列（時間會隨著累積，不需互動也會刷新）
-setInterval(()=>{ if(cgName) updateUrineReminder(); }, 60000);
+setInterval(()=>{ if(cgName){ updateUrineReminder(); updateStoolReminder(); } }, 60000);
 </script>
 
 <!-- Chart.js & html2canvas via CDN -->
