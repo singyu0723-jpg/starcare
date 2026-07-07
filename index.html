@@ -108,6 +108,25 @@ body{
 .ur-danger{background:var(--danger-soft);border-color:#efc1b2;color:#7a2a1a}
 .ur-bar:active{transform:scale(.99)}
 
+/* ── 每日照顧表 checklist ── */
+.care-card{padding:6px 10px}
+.care-item{
+  display:flex;align-items:center;gap:13px;cursor:pointer;
+  padding:14px 10px;border-radius:12px;transition:background .12s;
+}
+.care-item:active{background:var(--surface-2)}
+.care-item + .care-item{border-top:1px solid var(--rim)}
+.care-box{
+  width:26px;height:26px;flex-shrink:0;border-radius:8px;
+  border:2px solid var(--rim-2);background:var(--surface);
+  display:flex;align-items:center;justify-content:center;
+  font-size:16px;font-weight:800;color:#fff;line-height:1;transition:all .12s;
+}
+.care-item.done .care-box{background:var(--brand);border-color:var(--brand)}
+.care-name{flex:1;font-size:15.5px;font-weight:600;color:var(--ink);letter-spacing:.02em}
+.care-item.done .care-name{color:var(--muted);text-decoration:line-through}
+.care-meta{font-size:12px;color:var(--brand-deep);font-weight:600;white-space:nowrap;flex-shrink:0}
+
 .pg{padding:12px 14px 40px}
 
 /* ── 小節標題 ── 放大＋綠色強調橫槓 */
@@ -454,7 +473,7 @@ body{
   <div id="stool-reminder"></div>
   <div class="tab-bar">
     <div class="tab active" onclick="window.goTab(0)">輸出入量</div>
-    <div class="tab" onclick="window.goTab(1)">生理狀態</div>
+    <div class="tab" onclick="window.goTab(1)">每日照顧</div>
     <div class="tab" onclick="window.goTab(2)">查閱記錄</div>
     <div class="tab" onclick="window.goTab(3)">掛號紀錄</div>
   </div>
@@ -481,7 +500,7 @@ const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 const DOC_REF = doc(db, "appData", "care_tracker_v1");
 
-let tab=0, cgName='', ioRecs=[], vtRecs=[], apptRecs=[], chartInst=null, chartType='io', chartRange='week', viewDate='';
+let tab=0, cgName='', ioRecs=[], vtRecs=[], apptRecs=[], careRecs=[], chartInst=null, chartType='io', chartRange='week', viewDate='';
 let isSaving=false;
 
 // ── 簡繁切換 ──
@@ -489,6 +508,10 @@ const ZH_TW_TO_CN = {
   '護理日誌':'护理日志','設定名字':'设定名字','連線中':'连线中',
   '輸出入量':'输出入量','生理狀態':'生理状态','查閱記錄':'查阅记录','掛號紀錄':'挂号记录',
   '當天合計':'当天合计','總輸入':'总输入','總輸出':'总输出',
+  '每日照顧':'每日照顾','每日照顧表':'每日照顾表',
+  '換鼻貼':'换鼻贴','擦藥(上午)':'擦药(上午)','擦藥(下午)':'擦药(下午)','坐輪椅':'坐轮椅','坐床邊':'坐床边',
+  '口腔清潔(上午)':'口腔清洁(上午)','口腔清潔(下午)':'口腔清洁(下午)','手足復健':'手足复健','口腔運動':'口腔运动',
+  '血壓體溫(上午)':'血压体温(上午)','血壓體溫(下午)':'血压体温(下午)',
   '輸入':'输入','牛奶':'牛奶','藥＋水':'药＋水','時間':'时间','現在':'现在','新增輸入':'新增输入',
   '輸出':'输出','尿液':'尿液','大便':'大便','新增輸出':'新增输出',
   '今日記錄':'今日记录','今日尚無記錄':'今日尚无记录',
@@ -718,9 +741,10 @@ onSnapshot(DOC_REF, (snap) => {
     ioRecs=data.ioRecs||[];
     vtRecs=data.vtRecs||[];
     apptRecs=data.apptRecs||[];
+    careRecs=data.careRecs||[];
     // cgName 只從 localStorage 讀，不從雲端同步，每個裝置各自記住自己的名字
   }else{
-    ioRecs=[]; vtRecs=[]; apptRecs=[];
+    ioRecs=[]; vtRecs=[]; apptRecs=[]; careRecs=[];
   }
   setSyncDot('online');
   viewDate=viewDate||dk();
@@ -746,7 +770,7 @@ onSnapshot(DOC_REF, (snap) => {
 async function saveAll(){
   setSyncDot('syncing');
   try{
-    await setDoc(DOC_REF,{ioRecs,vtRecs,apptRecs},{merge:true});
+    await setDoc(DOC_REF,{ioRecs,vtRecs,apptRecs,careRecs},{merge:true});
     setSyncDot('online');
   }catch(e){
     setSyncDot('');
@@ -759,7 +783,7 @@ function updatePill(){
 }
 function updateTabBar(){
   const tabs=document.querySelectorAll('.tab');
-  const labels=[t('輸出入量'),t('生理狀態'),t('查閱記錄'),t('掛號紀錄')];
+  const labels=[t('輸出入量'),t('每日照顧'),t('查閱記錄'),t('掛號紀錄')];
   tabs.forEach((tb,i)=>tb.textContent=labels[i]);
 }
 
@@ -987,11 +1011,39 @@ window.confirmDelIO=function(id){
   });
 };
 
+// ── 每日照顧表 checklist ──
+const CARE_ITEMS=['換鼻貼','擦藥(上午)','擦藥(下午)','坐輪椅','坐床邊','口腔清潔(上午)','口腔清潔(下午)','手足復健','口腔運動','擦澡','洗澡','血壓體溫(上午)','血壓體溫(下午)'];
+function buildCareChecklist(){
+  const today=dk();
+  const todayRecs=careRecs.filter(r=>r.date===today);
+  const rows=CARE_ITEMS.map((item,i)=>{
+    const rec=todayRecs.find(r=>r.item===item);
+    const done=!!rec;
+    const meta=done?`<span class="care-meta">${fmt12(rec.time)}${rec.cg?'・'+rec.cg:''}</span>`:'';
+    return `<div class="care-item ${done?'done':''}" onclick="window.toggleCare(${i})"><span class="care-box">${done?'✓':''}</span><span class="care-name">${t(item)}</span>${meta}</div>`;
+  }).join('');
+  return `<div class="sec">${t('每日照顧表')}</div><div class="fcard care-card">${rows}</div>`;
+}
+window.toggleCare=function(i){
+  if(!cgName){showNameModal();return;}
+  const item=CARE_ITEMS[i];
+  const today=dk();
+  const existing=careRecs.find(r=>r.date===today&&r.item===item);
+  if(existing){
+    careRecs=careRecs.filter(r=>!(r.date===today&&r.item===item));
+  }else{
+    careRecs.push({id:String(Date.now()),date:today,item,time:nt(),cg:cgName});
+  }
+  saveAll();
+  render();
+};
+
 // ── TAB 2 ──
 function renderVT(){
   const today=dk();
   const recs=sortT(vtRecs.filter(r=>r.date===today));
   C().innerHTML=`
+  ${buildCareChecklist()}
   <div class="sec">生理紀錄</div>
   <div class="fcard">
     <div class="frow"><span class="flbl">${t('體溫')}</span><input type="number" inputmode="decimal" id="temp" placeholder="36.5" step="0.1"/><span class="funit">°C</span></div>
